@@ -5,13 +5,11 @@ const API_BASE_URL = (() => {
   if (typeof window !== "undefined") {
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
       return "http://127.0.0.1:8000";
-    if (window.location.protocol === "file:")
-      return "http://127.0.0.1:8000";
   }
-  return "https://nyc-airbnb-room-type-predictor.onrender.com";
+  return "https://house-availability-preditions-2347.onrender.com";
 })();
 const PREDICT_ENDPOINT = `${API_BASE_URL}/predict`;
-const HEALTH_ENDPOINT  = `${API_BASE_URL}/`;
+const HEALTH_ENDPOINT  = `${API_BASE_URL}/health`;
 const REDUCE_MOTION    = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // Room type metadata
@@ -622,9 +620,8 @@ resetBtn.addEventListener("click", () => {
 async function checkApiStatus() {
   const statusEl    = document.getElementById("apiStatus");
   const statusLabel = statusEl?.querySelector(".status-label");
-  const statusDot   = statusEl?.querySelector(".status-dot");
   try {
-    const res = await fetch(HEALTH_ENDPOINT, { method: "GET", signal: AbortSignal.timeout(6000) });
+    const res = await fetch(HEALTH_ENDPOINT, { method: "GET", signal: AbortSignal.timeout(15000) });
     if (res.ok) {
       statusEl.classList.add("online");
       statusEl.classList.remove("offline");
@@ -635,7 +632,7 @@ async function checkApiStatus() {
   } catch {
     statusEl.classList.add("offline");
     statusEl.classList.remove("online");
-    if (statusLabel) statusLabel.textContent = "API offline";
+    if (statusLabel) statusLabel.textContent = "API sleeping / offline";
   }
 }
 

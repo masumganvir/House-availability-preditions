@@ -218,6 +218,11 @@ input, select { font-family: var(--font-mono); }
 }
 
 .nav-right { flex-shrink: 0; }
+.nav-api-link:hover {
+  border-color: var(--amber) !important;
+  color: var(--amber) !important;
+  background: rgba(255,180,84,0.08) !important;
+}
 
 .api-status {
   display: inline-flex; align-items: center; gap: 7px;
