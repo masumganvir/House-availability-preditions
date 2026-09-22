@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ═══════════════════════════════════════════
+       PRIMARY META
+  ═══════════════════════════════════════════ -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <title>NYC Airbnb Room Type Predictor — AI-Powered Listing Intelligence</title>
+  <meta name="description" content="Predict whether a New York City Airbnb listing is an entire home, private room, or shared room using a machine-learning model trained on real NYC listing data.">
+  <meta name="keywords" content="NYC Airbnb, room type predictor, machine learning, real estate, New York, AI, FastAPI, scikit-learn">
+  <meta name="author" content="NYC Airbnb Room Type Predictor">
+  <meta name="theme-color" content="#0B0F1A">
+
+  <!-- ═══════════════════════════════════════════
+       FAVICON + ICONS
+  ═══════════════════════════════════════════ -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="shortcut icon" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/favicon.svg">
+
+  <!-- ═══════════════════════════════════════════
+       OPEN GRAPH / SOCIAL
+  ═══════════════════════════════════════════ -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="NYC Airbnb Room Type Predictor">
+  <meta property="og:description" content="Drop in listing coordinates, price, and reviews — our ML model tells you the room type in under a second.">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="NYC Airbnb Room Type Predictor">
+  <meta name="twitter:description" content="AI-powered room type prediction for NYC Airbnb listings.">
+
+  <!-- ═══════════════════════════════════════════
+       FONTS
+  ═══════════════════════════════════════════ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- ═══════════════════════════════════════════
+       STYLES
+  ═══════════════════════════════════════════ -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     AMBIENT BACKGROUND LAYERS
+════════════════════════════════════════════ -->
+<canvas id="particleCanvas" aria-hidden="true"></canvas>
+<div class="skyline-bg" aria-hidden="true" id="skylineBg"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="aurora" aria-hidden="true"></div>
+
+<!-- ════════════════════════════════════════════
+     TOP NAV BAR
+════════════════════════════════════════════ -->
+<nav class="topnav" role="navigation" aria-label="Site navigation">
+  <div class="topnav-inner">
+    <div class="nav-brand">
+      <svg class="nav-logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="1" y="12" width="4" height="12" rx="0.8" fill="#192035"/>
+        <rect x="2" y="9" width="2.5" height="15" rx="0.6" fill="#FFB454" opacity="0.3"/>
+        <rect x="7" y="6" width="5" height="18" rx="0.8" fill="#192035"/>
+        <rect x="8.5" y="3" width="2.5" height="21" rx="0.6" fill="#4FD1C5" opacity="0.35"/>
+        <rect x="15" y="9" width="5" height="15" rx="0.8" fill="#192035"/>
+        <rect x="16.5" y="6" width="2.5" height="18" rx="0.6" fill="#FFB454" opacity="0.28"/>
+        <rect x="22" y="13" width="2" height="11" rx="0.6" fill="#192035"/>
+        <circle cx="9.5" cy="4" r="1.5" fill="#FFB454"/>
+        <circle cx="9.5" cy="4" r="3" fill="#FFB454" opacity="0.12"/>
+        <rect x="7.5" y="8" width="1.5" height="1.5" rx="0.3" fill="#FFB454" opacity="0.9"/>
+        <rect x="10" y="8" width="1.5" height="1.5" rx="0.3" fill="#4FD1C5" opacity="0.8"/>
+        <rect x="1.5" y="14" width="1.2" height="1.2" rx="0.2" fill="#FFB454" opacity="0.7"/>
+        <rect x="16" y="11" width="1.2" height="1.2" rx="0.2" fill="#4FD1C5" opacity="0.9"/>
+      </svg>
+      <span class="nav-wordmark">NYC<span class="nav-accent">Predict</span></span>
+    </div>
+
+    <div class="nav-center">
+      <span class="nav-badge">
+        <span class="nav-badge-dot"></span>
+        Machine Learning · Random Forest
+      </span>
+    </div>
+
+    <div class="nav-right">
+      <span class="api-status" id="apiStatus" title="API health status">
+        <span class="status-dot"></span>
+        <span class="status-label">checking API</span>
+      </span>
+    </div>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════
+     MAIN PAGE WRAPPER
+════════════════════════════════════════════ -->
+<div class="page" id="mainPage">
+
+  <!-- ─── HERO ─────────────────────────────── -->
+  <header class="hero" role="banner">
+    <div class="hero-eyebrow">
+      <span class="eyebrow-pill">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <circle cx="6" cy="6" r="5" stroke="#4FD1C5" stroke-width="1.5"/>
+          <path d="M4 6l1.5 1.5L8 4.5" stroke="#4FD1C5" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        AI · NYC Airbnb · Room Type Prediction
+      </span>
+    </div>
+
+    <h1 class="headline">
+      What kind of <span class="headline-accent">stay</span><br>is this listing?
+    </h1>
+
+    <p class="subhead">
+      Drop in coordinates, price &amp; reviews — our trained model classifies any NYC listing into 
+      <strong>Entire Home</strong>, <strong>Private Room</strong>, or <strong>Shared Room</strong> 
+      in under a second.
+    </p>
+
+    <div class="hero-stats" role="list" aria-label="Model statistics">
+      <div class="stat-card" role="listitem">
+        <span class="stat-value">48K+</span>
+        <span class="stat-label">Training samples</span>
+      </div>
+      <div class="stat-card" role="listitem">
+        <span class="stat-value">3</span>
+        <span class="stat-label">Room classes</span>
+      </div>
+      <div class="stat-card" role="listitem">
+        <span class="stat-value">RF</span>
+        <span class="stat-label">Algorithm</span>
+      </div>
+      <div class="stat-card" role="listitem">
+        <span class="stat-value">&lt;1s</span>
+        <span class="stat-label">Prediction time</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── MAIN GRID ─────────────────────────── -->
+  <main class="grid" role="main">
+
+    <!-- ═══ FORM PANEL ══════════════════════ -->
+    <section class="panel form-panel glass-panel" aria-labelledby="formTitle">
+      <div class="panel-head">
+        <div class="panel-title-group">
+          <div class="panel-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M3 14V8a1 1 0 011-1h10a1 1 0 011 1v6" stroke="#FFB454" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M1 14h16" stroke="#FFB454" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M7 7V5a2 2 0 014 0v2" stroke="#FFB454" stroke-width="1.5" stroke-linecap="round"/>
+              <rect x="7.5" y="9.5" width="3" height="3" rx="0.5" fill="#FFB454" opacity="0.6"/>
+            </svg>
+          </div>
+          <h2 id="formTitle">Listing Details</h2>
+        </div>
+        <button type="button" class="ghost-btn" id="exampleBtn" title="Load a sample NYC listing">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <path d="M6.5 1v2M6.5 10v2M1 6.5h2M10 6.5h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            <circle cx="6.5" cy="6.5" r="3" stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+          Try an example
+        </button>
+      </div>
+
+      <!-- progress steps -->
+      <div class="form-steps" role="list" aria-label="Form sections">
+        <div class="step-pill active" id="step1pill" role="listitem">
+          <span class="step-num">1</span> Location
+        </div>
+        <div class="step-divider" aria-hidden="true"></div>
+        <div class="step-pill" id="step2pill" role="listitem">
+          <span class="step-num">2</span> Pricing
+        </div>
+        <div class="step-divider" aria-hidden="true"></div>
+        <div class="step-pill" id="step3pill" role="listitem">
+          <span class="step-num">3</span> Reviews
+        </div>
+      </div>
+
+      <form id="predictForm" novalidate autocomplete="off">
+
+        <!-- Section 1: Location -->
+        <fieldset class="form-section" id="section1">
+          <legend class="section-legend">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M7 1C4.79 1 3 2.79 3 5c0 3.25 4 8 4 8s4-4.75 4-8c0-2.21-1.79-4-4-4z" stroke="#4FD1C5" stroke-width="1.2" fill="none"/>
+              <circle cx="7" cy="5" r="1.5" fill="#4FD1C5"/>
+            </svg>
+            Location
+          </legend>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="latitude">
+                <span class="label-text">Latitude</span>
+                <span class="label-hint">–90 to 90</span>
+              </label>
+              <div class="input-wrapper">
+                <span class="input-prefix" aria-hidden="true">φ</span>
+                <input type="number" id="latitude" name="latitude" step="0.000001" min="-90" max="90" placeholder="40.7128" required autocomplete="off">
+              </div>
+            </div>
+            <div class="field">
+              <label for="longitude">
+                <span class="label-text">Longitude</span>
+                <span class="label-hint">–180 to 180</span>
+              </label>
+              <div class="input-wrapper">
+                <span class="input-prefix" aria-hidden="true">λ</span>
+                <input type="number" id="longitude" name="longitude" step="0.000001" min="-180" max="180" placeholder="-74.0060" required autocomplete="off">
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="neighbourhood_group">
+                <span class="label-text">Borough</span>
+              </label>
+              <div class="input-wrapper select-wrapper">
+                <svg class="select-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <path d="M2 4l4 4 4-4" stroke="#8B92A8" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <select id="neighbourhood_group" name="neighbourhood_group" required>
+                  <option value="" disabled selected>Choose a borough</option>
+                  <option value="Manhattan">🗽 Manhattan</option>
+                  <option value="Brooklyn">🌉 Brooklyn</option>
+                  <option value="Queens">✈️ Queens</option>
+                  <option value="Bronx">🏟️ Bronx</option>
+                  <option value="Staten Island">⛴️ Staten Island</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="neighbourhood">
+                <span class="label-text">Neighbourhood</span>
+              </label>
+              <div class="input-wrapper">
+                <input type="text" id="neighbourhood" name="neighbourhood" placeholder="e.g. Williamsburg" required autocomplete="off">
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section 2: Pricing -->
+        <fieldset class="form-section" id="section2">
+          <legend class="section-legend">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <circle cx="7" cy="7" r="5.5" stroke="#FFB454" stroke-width="1.2"/>
+              <path d="M7 3.5v1M7 9.5v1M5 6.5a2 2 0 004 0" stroke="#FFB454" stroke-width="1.1" stroke-linecap="round"/>
+            </svg>
+            Pricing &amp; Stay
+          </legend>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="price">
+                <span class="label-text">Price per night</span>
+                <span class="label-hint">USD</span>
+              </label>
+              <div class="input-wrapper">
+                <span class="input-prefix" aria-hidden="true">$</span>
+                <input type="number" id="price" name="price" min="1" step="1" placeholder="150" required autocomplete="off">
+              </div>
+            </div>
+            <div class="field">
+              <label for="minimum_nights">
+                <span class="label-text">Minimum nights</span>
+                <span class="label-hint">1–365</span>
+              </label>
+              <div class="input-wrapper">
+                <svg class="input-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="#8B92A8" stroke-width="1.1"/>
+                  <path d="M4.5 1v3M9.5 1v3M1.5 6h11" stroke="#8B92A8" stroke-width="1.1" stroke-linecap="round"/>
+                </svg>
+                <input type="number" id="minimum_nights" name="minimum_nights" min="1" max="365" step="1" placeholder="3" required autocomplete="off">
+              </div>
+            </div>
+          </div>
+
+          <div class="field range-field">
+            <label for="availability_365">
+              <span class="label-text">Days available per year</span>
+            </label>
+            <div class="range-wrapper">
+              <input type="range" id="availability_365" name="availability_365" min="0" max="365" step="1" value="180" required>
+              <div class="range-readout">
+                <span id="availabilityValue">180</span>
+                <span class="range-unit">/ 365 days</span>
+              </div>
+            </div>
+            <div class="range-ticks" aria-hidden="true">
+              <span>0</span><span>91</span><span>182</span><span>274</span><span>365</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section 3: Reviews -->
+        <fieldset class="form-section" id="section3">
+          <legend class="section-legend">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M7 1.5l1.54 3.12 3.46.5-2.5 2.44.59 3.44L7 9.27 3.91 10.99l.59-3.44L2 5.12l3.46-.5L7 1.5z" stroke="#9F7AEA" stroke-width="1.1" fill="none"/>
+            </svg>
+            Reviews &amp; Host
+          </legend>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="number_of_reviews">
+                <span class="label-text">Total reviews</span>
+              </label>
+              <div class="input-wrapper">
+                <svg class="input-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M2 10.5l2-2 2 2 2-3 2 3 2-4" stroke="#8B92A8" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <input type="number" id="number_of_reviews" name="number_of_reviews" min="0" step="1" placeholder="24" required autocomplete="off">
+              </div>
+            </div>
+            <div class="field">
+              <label for="reviews_per_month">
+                <span class="label-text">Reviews / month</span>
+              </label>
+              <div class="input-wrapper">
+                <input type="number" id="reviews_per_month" name="reviews_per_month" min="0" step="0.01" placeholder="1.2" required autocomplete="off">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="calculated_host_listings_count">
+              <span class="label-text">Host listing count</span>
+              <span class="label-hint">properties this host manages</span>
+            </label>
+            <div class="input-wrapper">
+              <svg class="input-icon" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <circle cx="5" cy="4" r="2" stroke="#8B92A8" stroke-width="1.1"/>
+                <circle cx="9.5" cy="4" r="1.5" stroke="#8B92A8" stroke-width="1.1"/>
+                <path d="M1 11c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="#8B92A8" stroke-width="1.1" stroke-linecap="round"/>
+                <path d="M9.5 7c1.4 0 2.5 1.1 2.5 2.5" stroke="#8B92A8" stroke-width="1.1" stroke-linecap="round"/>
+              </svg>
+              <input type="number" id="calculated_host_listings_count" name="calculated_host_listings_count" min="0" step="1" placeholder="1" required autocomplete="off">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Submit -->
+        <div class="submit-area">
+          <button type="submit" class="predict-btn" id="predictBtn">
+            <span class="btn-bg-pulse" aria-hidden="true"></span>
+            <svg class="btn-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+              <path d="M6.5 9l2 2 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="btn-label">Predict Room Type</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
+            <span class="btn-arrow" aria-hidden="true">→</span>
+          </button>
+          <p class="form-error" id="formError" role="alert" aria-live="assertive"></p>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- ═══ RESULT PANEL ═════════════════════ -->
+    <section class="panel result-panel glass-panel" aria-labelledby="resultTitle" aria-live="polite">
+      <div class="panel-head">
+        <div class="panel-title-group">
+          <div class="panel-icon result-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="6.5" stroke="#4FD1C5" stroke-width="1.4" stroke-dasharray="3 2"/>
+              <path d="M6 9l2 2 4-4" stroke="#4FD1C5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2 id="resultTitle">Prediction</h2>
+        </div>
+        <button type="button" class="ghost-btn reset-btn" id="resetBtn" hidden title="Clear results">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M2 6a4 4 0 108-0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M10 3V6H7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Reset
+        </button>
+      </div>
+
+      <!-- Empty state -->
+      <div class="result-empty" id="resultEmpty">
+        <div class="empty-skyline" aria-hidden="true">
+          <div class="esb-wrapper">
+            <div class="esb-col">
+              <div class="esb-b" style="--h:44px;--w:28px"></div>
+            </div>
+            <div class="esb-col">
+              <div class="esb-b" style="--h:70px;--w:24px"></div>
+            </div>
+            <div class="esb-col">
+              <div class="esb-b" style="--h:96px;--w:30px"></div>
+              <div class="esb-antenna"></div>
+            </div>
+            <div class="esb-col">
+              <div class="esb-b" style="--h:62px;--w:26px"></div>
+            </div>
+            <div class="esb-col">
+              <div class="esb-b" style="--h:38px;--w:22px"></div>
+            </div>
+          </div>
+        </div>
+        <p class="empty-label">Fill in the listing details<br>and hit Predict to illuminate the city.</p>
+        <div class="empty-features" aria-label="What to expect">
+          <div class="ef-item">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5.5" stroke="#4FD1C5" stroke-width="1.2"/><path d="M5 7l1.5 1.5L9 5.5" stroke="#4FD1C5" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Room classification
+          </div>
+          <div class="ef-item">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5.5" stroke="#FFB454" stroke-width="1.2"/><path d="M5 7l1.5 1.5L9 5.5" stroke="#FFB454" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Confidence scores
+          </div>
+          <div class="ef-item">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5.5" stroke="#9F7AEA" stroke-width="1.2"/><path d="M5 7l1.5 1.5L9 5.5" stroke="#9F7AEA" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Visual breakdown
+          </div>
+        </div>
+      </div>
+
+      <!-- Result content -->
+      <div class="result-content" id="resultContent" hidden>
+
+        <!-- Winner badge -->
+        <div class="result-badge" id="resultBadge">
+          <div class="badge-ring" aria-hidden="true"></div>
+          <div class="badge-inner">
+            <div class="badge-icon" id="badgeIcon" aria-hidden="true"></div>
+            <div class="badge-text">
+              <span class="badge-eyebrow">Predicted as</span>
+              <span class="badge-name" id="predictedName">—</span>
+            </div>
+          </div>
+          <div class="badge-confidence" id="badgeConfidence"></div>
+        </div>
+
+        <!-- Buildings visualization -->
+        <div class="buildings-scene" aria-hidden="true">
+          <div class="buildings-row" id="buildingsRow"></div>
+          <div class="buildings-ground"></div>
+          <div class="buildings-reflection"></div>
+        </div>
+
+        <!-- Probability breakdown -->
+        <div class="prob-section">
+          <h3 class="prob-title">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <rect x="1" y="8" width="2.5" height="4.5" rx="0.6" fill="#4FD1C5"/>
+              <rect x="5" y="5" width="2.5" height="7.5" rx="0.6" fill="#FFB454"/>
+              <rect x="9" y="2" width="2.5" height="10.5" rx="0.6" fill="#9F7AEA"/>
+            </svg>
+            Confidence Breakdown
+          </h3>
+          <div class="prob-list" id="probList"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ─── FOOTER ────────────────────────────── -->
+  <footer class="page-footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-logo" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <rect x="1" y="12" width="4" height="12" rx="0.8" fill="#192035"/>
+          <rect x="2" y="9" width="2.5" height="15" rx="0.6" fill="#FFB454" opacity="0.5"/>
+          <rect x="7" y="6" width="5" height="18" rx="0.8" fill="#192035"/>
+          <rect x="8.5" y="3" width="2.5" height="21" rx="0.6" fill="#4FD1C5" opacity="0.5"/>
+          <rect x="15" y="9" width="5" height="15" rx="0.8" fill="#192035"/>
+          <rect x="16.5" y="6" width="2.5" height="18" rx="0.6" fill="#FFB454" opacity="0.4"/>
+          <circle cx="9.5" cy="4" r="1.5" fill="#FFB454"/>
+        </svg>
+      </div>
+      <p class="footer-text">
+        Powered by <span class="footer-pill">FastAPI</span> &amp; 
+        <span class="footer-pill">scikit-learn</span>
+        &nbsp;·&nbsp; Trained on NYC Airbnb listing data
+      </p>
+    </div>
+  </footer>
+
+</div><!-- /.page -->
+
+<script src="script.js"></script>
+</body>
+</html>
